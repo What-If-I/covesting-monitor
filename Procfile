@@ -1,0 +1,1 @@
+bot: covesting-monitor
