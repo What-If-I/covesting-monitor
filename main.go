@@ -80,10 +80,13 @@ func sendTelegramMsg(channel string, msg string) error {
 }
 
 func main() {
-	covestingCourse := getCourse("covesting")
-	fmt.Println(covestingCourse.String())
-	err := sendTelegramMsg(channelID, covestingCourse.String())
-	if err != nil {
-		log.Fatal("Error:", err)
+	for {
+		covestingCourse := getCourse("covesting")
+		fmt.Println(covestingCourse.String())
+		err := sendTelegramMsg(channelID, covestingCourse.String())
+		if err != nil {
+			log.Fatal("Error:", err)
+		}
+		time.Sleep(24 * time.Hour)
 	}
 }
