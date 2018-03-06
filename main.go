@@ -18,7 +18,11 @@ var (
 	telegramBotAPI = "https://api.telegram.org/bot" + botToken + "/"
 )
 
-var Response []Course
+const (
+	submitHour                = 10
+	retryInterval             = 5 * time.Minute
+	notificationCheckInterval = 15 * time.Minute
+)
 
 type Course struct {
 	ID               string `json:"id"`
@@ -81,12 +85,22 @@ func sendTelegramMsg(channel string, msg string) error {
 
 func main() {
 	for {
-		covestingCourse := getCourse("covesting")
-		fmt.Println(covestingCourse.String())
-		err := sendTelegramMsg(channelID, covestingCourse.String())
-		if err != nil {
-			log.Fatal("Error:", err)
+		var lastSubmitDay int
+		currentTime := time.Now()
+		if lastSubmitDay != currentTime.Day() && currentTime.Hour() >= submitHour {
+			log.Println("Sending course...")
+
+			covestingCourse := getCourse("covesting")
+			err := sendTelegramMsg(channelID, covestingCourse.String())
+			if err != nil {
+				log.Println("Error:", err)
+				time.Sleep(retryInterval)
+				continue
+			}
+			log.Println("Message has been sent.")
+
+			lastSubmitDay = currentTime.Day()
+			time.Sleep(notificationCheckInterval)
 		}
-		time.Sleep(24 * time.Hour)
 	}
 }
