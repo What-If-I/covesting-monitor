@@ -100,7 +100,7 @@ func main() {
 			log.Println("Message has been sent.")
 
 			lastSubmitDay = currentTime.Day()
-			time.Sleep(notificationCheckInterval)
 		}
+		time.Sleep(notificationCheckInterval)
 	}
 }
