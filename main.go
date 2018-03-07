@@ -84,8 +84,8 @@ func sendTelegramMsg(channel string, msg string) error {
 }
 
 func main() {
+	var lastSubmitDay int
 	for {
-		var lastSubmitDay int
 		currentTime := time.Now()
 		if lastSubmitDay != currentTime.Day() && currentTime.Hour() >= submitHour {
 			log.Println("Sending course...")
