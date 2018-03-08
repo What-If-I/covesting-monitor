@@ -19,9 +19,8 @@ var (
 )
 
 const (
-	submitHour                = 10
-	retryInterval             = 5 * time.Minute
-	notificationCheckInterval = 15 * time.Minute
+	submitHour    = 10
+	retryInterval = 5 * time.Minute
 )
 
 type Course struct {
@@ -47,9 +46,9 @@ func (c Course) String() string {
 	isNegativeGrow := c.PercentChange24h[0] == '-'
 	var courseGrowEmoji string
 	if isNegativeGrow {
-		courseGrowEmoji = "↘️️"
+		courseGrowEmoji = "😭️️️"
 	} else {
-		courseGrowEmoji = "↗️"
+		courseGrowEmoji = "🤩️"
 	}
 	utcSeconds, _ := strconv.ParseInt(c.LastUpdated, 10, 64)
 	c.LastUpdated = time.Unix(utcSeconds, 0).String()
@@ -83,24 +82,30 @@ func sendTelegramMsg(channel string, msg string) error {
 	return err
 }
 
+func findSecondsUntil(future time.Time) time.Duration {
+	return time.Duration(future.Sub(time.Now()).Seconds()) * time.Second
+}
+
 func main() {
-	var lastSubmitDay int
 	for {
-		currentTime := time.Now()
-		if lastSubmitDay != currentTime.Day() && currentTime.Hour() >= submitHour {
-			log.Println("Sending course...")
-
-			covestingCourse := getCourse("covesting")
-			err := sendTelegramMsg(channelID, covestingCourse.String())
-			if err != nil {
-				log.Println("Error:", err)
-				time.Sleep(retryInterval)
-				continue
-			}
-			log.Println("Message has been sent.")
-
-			lastSubmitDay = currentTime.Day()
+		log.Println("Getting course...")
+		covestingCourse := getCourse("covesting")
+		log.Println("Course is:\n", covestingCourse)
+		err := sendTelegramMsg(channelID, covestingCourse.String())
+		if err != nil {
+			log.Println("Error:", err)
+			time.Sleep(retryInterval)
+			continue
 		}
-		time.Sleep(notificationCheckInterval)
+		log.Println("Message has been sent.")
+
+		now := time.Now()
+		nextTick := time.Date(
+			now.Year(), now.Month(), now.Day()+1, submitHour,
+			0, 0, 0, now.Location())
+		secondsTillNextTick := findSecondsUntil(nextTick)
+
+		log.Printf("Sleeping for %v.", secondsTillNextTick)
+		time.Sleep(secondsTillNextTick)
 	}
 }
