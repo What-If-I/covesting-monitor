@@ -54,8 +54,8 @@ func (c Course) String() string {
 	c.LastUpdated = time.Unix(utcSeconds, 0).String()
 	c.PriceRUB = fmt.Sprintf("%.2f", toFloat(c.PriceRUB))
 	c.PriceUSD = fmt.Sprintf("%.2f", toFloat(c.PriceUSD))
-	return fmt.Sprintf("%v\nPrice: %v$\n            %v₽\nChange 24h: %v%%%v\nUpdated: %v",
-		c.Name, c.PriceUSD, c.PriceRUB, c.PercentChange24h, courseGrowEmoji, c.LastUpdated)
+	return fmt.Sprintf("%v\nPrice: %v$\n            %v₽\nChange 24h: %v%% %v\nChange7d:%v\nUpdated: %v",
+		c.Name, c.PriceUSD, c.PriceRUB, c.PercentChange24h, courseGrowEmoji, c.PercentChange7d, c.LastUpdated)
 }
 
 func getCourse(currency string) Course {
