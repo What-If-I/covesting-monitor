@@ -16,12 +16,18 @@ var (
 	botToken       = os.Getenv("botToken")
 	channelID      = os.Getenv("channelID")
 	telegramBotAPI = "https://api.telegram.org/bot" + botToken + "/"
+	submitHour     = convertToInt(os.Getenv("submitTime"))
 )
 
-const (
-	submitHour    = 10
-	retryInterval = 5 * time.Minute
-)
+const retryInterval = 5 * time.Minute
+
+func convertToInt(string string) int {
+	hour, err := strconv.ParseInt(string, 10, 32)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return int(hour)
+}
 
 type Course struct {
 	ID               string `json:"id"`
