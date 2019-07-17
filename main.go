@@ -67,7 +67,7 @@ func getCourse(currency string) (Course, error) {
 	var courses []Course
 	err = json.Unmarshal(bodyBytes, &courses)
 	if err != nil {
-		return Course{}, err
+		return Course{}, fmt.Errorf("failed to parse course: %v. \n Got body: %s", err, bodyBytes)
 	}
 
 	return courses[0], nil
