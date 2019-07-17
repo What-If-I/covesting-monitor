@@ -64,20 +64,21 @@ func (c Course) String() string {
 		c.Name, c.PriceUSD, c.PriceRUB, c.PercentChange24h, courseGrowEmoji, c.PercentChange7d, c.LastUpdated)
 }
 
-func getCourse(currency string) Course {
+func getCourse(currency string) (Course, error) {
 	resp, _ := http.Get("https://api.coinmarketcap.com/v1/ticker/" + currency + "/?convert=RUB")
 	defer resp.Body.Close()
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return Course{}, err
 	}
 	var courses []Course
 	err = json.Unmarshal(bodyBytes, &courses)
 	if err != nil {
-		log.Fatal(err)
+		return Course{}, err
 	}
-	return courses[0]
+
+	return courses[0], nil
 }
 
 func sendTelegramMsg(channel string, msg string) error {
@@ -95,14 +96,21 @@ func findSecondsUntil(future time.Time) time.Duration {
 func main() {
 	for {
 		log.Println("Getting course...")
-		covestingCourse := getCourse("covesting")
-		log.Println("Course is:\n", covestingCourse)
-		err := sendTelegramMsg(channelID, covestingCourse.String())
+		covestingCourse, err := getCourse("covesting")
 		if err != nil {
 			log.Println("Error:", err)
 			time.Sleep(retryInterval)
 			continue
 		}
+
+		log.Println("Course is:\n", covestingCourse)
+		err = sendTelegramMsg(channelID, covestingCourse.String())
+		if err != nil {
+			log.Println("Error:", err)
+			time.Sleep(retryInterval)
+			continue
+		}
+
 		log.Println("Message has been sent.")
 
 		now := time.Now()
