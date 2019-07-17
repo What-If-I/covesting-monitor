@@ -87,17 +87,19 @@ func main() {
 
 	for {
 		log.Printf("Getting %s course...", currencyName)
-		covestingCourse, err := getCourse(currencyName)
+		course, err := getCourse(currencyName)
 		if err != nil {
-			log.Println("Error:", err)
+			log.Printf("Failed to fetch course: %v\n", err)
+			log.Printf("Will try again after: %d minutes\n", retryInterval/time.Minute)
 			time.Sleep(retryInterval)
 			continue
 		}
 
-		log.Println("Course is:\n", covestingCourse)
-		err = telegramClient.sendMsg(channelID, covestingCourse.String())
+		log.Println("Course is:\n", course)
+		err = telegramClient.sendMsg(channelID, course.String())
 		if err != nil {
-			log.Println("Error:", err)
+			log.Printf("Failed to send message course: %v\n", err)
+			log.Printf("Will try again after: %d minutes\n", retryInterval/time.Minute)
 			time.Sleep(retryInterval)
 			continue
 		}
