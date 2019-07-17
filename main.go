@@ -12,23 +12,7 @@ import (
 	"time"
 )
 
-var (
-	botToken       = os.Getenv("botToken")
-	channelID      = os.Getenv("channelID")
-	currencyName   = os.Getenv("currency")
-	telegramBotAPI = "https://api.telegram.org/bot" + botToken + "/"
-	submitHour     = convertToInt(os.Getenv("submitTime"))
-)
-
 const retryInterval = 5 * time.Minute
-
-func convertToInt(string string) int {
-	hour, err := strconv.ParseInt(string, 10, 32)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return int(hour)
-}
 
 type Course struct {
 	ID               string `json:"id"`
@@ -44,9 +28,16 @@ type Course struct {
 	LastUpdated      string `json:"last_updated"`
 }
 
-func toFloat(s string) float64 {
-	res, _ := strconv.ParseFloat(s, 32)
-	return res
+type TelegramClient struct {
+	token string
+}
+
+func (t TelegramClient) sendMsg(channel string, msg string) error {
+	channel = netUrl.QueryEscape(channel)
+	msg = netUrl.QueryEscape(msg)
+	url := fmt.Sprintf("%vsendMessage?chat_id=%v&text=%v", t.token, channel, msg)
+	_, err := http.Get(url)
+	return err
 }
 
 func (c Course) String() string {
@@ -82,19 +73,18 @@ func getCourse(currency string) (Course, error) {
 	return courses[0], nil
 }
 
-func sendTelegramMsg(channel string, msg string) error {
-	channel = netUrl.QueryEscape(channel)
-	msg = netUrl.QueryEscape(msg)
-	url := fmt.Sprintf("%vsendMessage?chat_id=%v&text=%v", telegramBotAPI, channel, msg)
-	_, err := http.Get(url)
-	return err
-}
-
 func findSecondsUntil(future time.Time) time.Duration {
 	return time.Duration(future.Sub(time.Now()).Seconds()) * time.Second
 }
 
 func main() {
+	submitHour := convertToInt(os.Getenv("submitTime"))
+	channelID := os.Getenv("channelID")
+	currencyName := os.Getenv("currency")
+	botToken := os.Getenv("botToken")
+
+	telegramClient := TelegramClient{token: botToken}
+
 	for {
 		log.Printf("Getting %s course...", currencyName)
 		covestingCourse, err := getCourse(currencyName)
@@ -105,7 +95,7 @@ func main() {
 		}
 
 		log.Println("Course is:\n", covestingCourse)
-		err = sendTelegramMsg(channelID, covestingCourse.String())
+		err = telegramClient.sendMsg(channelID, covestingCourse.String())
 		if err != nil {
 			log.Println("Error:", err)
 			time.Sleep(retryInterval)
@@ -123,4 +113,17 @@ func main() {
 		log.Printf("Sleeping for %v.", secondsTillNextTick)
 		time.Sleep(secondsTillNextTick)
 	}
+}
+
+func convertToInt(string string) int {
+	hour, err := strconv.ParseInt(string, 10, 32)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return int(hour)
+}
+
+func toFloat(s string) float64 {
+	res, _ := strconv.ParseFloat(s, 32)
+	return res
 }
