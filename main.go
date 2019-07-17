@@ -15,6 +15,7 @@ import (
 var (
 	botToken       = os.Getenv("botToken")
 	channelID      = os.Getenv("channelID")
+	currencyName   = os.Getenv("currency")
 	telegramBotAPI = "https://api.telegram.org/bot" + botToken + "/"
 	submitHour     = convertToInt(os.Getenv("submitTime"))
 )
@@ -95,8 +96,8 @@ func findSecondsUntil(future time.Time) time.Duration {
 
 func main() {
 	for {
-		log.Println("Getting course...")
-		covestingCourse, err := getCourse("covesting")
+		log.Printf("Getting %s course...", currencyName)
+		covestingCourse, err := getCourse(currencyName)
 		if err != nil {
 			log.Println("Error:", err)
 			time.Sleep(retryInterval)
