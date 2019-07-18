@@ -89,9 +89,10 @@ func main() {
 		log.Printf("Getting %s course...", currencyName)
 		course, err := getCourse(currencyName)
 		if err != nil {
-			log.Printf("Failed to fetch course: %v\n", err)
-			log.Printf("Will try again after: %d minutes\n", retryInterval/time.Minute)
-			time.Sleep(retryInterval)
+			log.Printf("Failed to send message course: %v\n", err)
+			secondsTillNextTick := timeForTomorrow(submitHour)
+			log.Printf("Will try again after: %d minutes\n", secondsTillNextTick/time.Minute)
+			time.Sleep(secondsTillNextTick)
 			continue
 		}
 
@@ -106,12 +107,7 @@ func main() {
 
 		log.Println("Message has been sent.")
 
-		now := time.Now()
-		nextTick := time.Date(
-			now.Year(), now.Month(), now.Day()+1, submitHour,
-			0, 0, 0, now.Location())
-		secondsTillNextTick := findSecondsUntil(nextTick)
-
+		secondsTillNextTick := timeForTomorrow(submitHour)
 		log.Printf("Sleeping for %v.", secondsTillNextTick)
 		time.Sleep(secondsTillNextTick)
 	}
@@ -128,4 +124,12 @@ func convertToInt(string string) int {
 func toFloat(s string) float64 {
 	res, _ := strconv.ParseFloat(s, 32)
 	return res
+}
+
+func timeForTomorrow(nextHour int) time.Duration {
+	now := time.Now()
+	nextTick := time.Date(
+		now.Year(), now.Month(), now.Day()+1, nextHour,
+		0, 0, 0, now.Location())
+	return findSecondsUntil(nextTick)
 }
